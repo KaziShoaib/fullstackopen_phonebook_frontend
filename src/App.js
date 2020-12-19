@@ -117,19 +117,27 @@ const App = () => {
           .then(returnedObject => {
             setPersons(persons.map(p => p.id === returnedObject.id ? returnedObject : p));
             setNotificationMessage(`Successfully changed contact number of '${returnedObject.name}'`);
+            clearFields();
             setTimeout(() => {
               setNotificationMessage(null)
             }, 5000);
           })
-          .catch(error => {
-            setNotificationMessage(`Contact '${person.name}' has already been removed from server`);
+          .catch(error => {   
+            //console.log(error.response);         
+            if(error.response.status === 404){
+              setNotificationMessage(`Contact '${person.name}' has already been removed from server`);
+              setPersons(persons.filter(p => p.id !== person.id));
+              clearFields();                            
+            }
+            else {
+              setNotificationMessage(error.response.data.error);
+            }
             setTimeout(() => {
               setNotificationMessage(null)
-            }, 5000);
-            setPersons(persons.filter(p => p.id !== person.id))
+            }, 5000);            
           })
       }
-      clearFields();
+      
       return;
     }
     
@@ -144,10 +152,18 @@ const App = () => {
         setPersons(persons.concat(returnedObject));
         clearFields();
         setNotificationMessage(`Successfully added new contact '${returnedObject.name}'`);
-            setTimeout(() => {
-              setNotificationMessage(null)
-            }, 5000);
-      })    
+        setTimeout(() => {
+          setNotificationMessage(null)
+        }, 5000);
+      })
+      .catch(error => {
+        let errorMessage = error.response.data.error;
+        //clearFields();
+        setNotificationMessage(errorMessage);
+        setTimeout(() => {
+          setNotificationMessage(null)
+        }, 5000);
+      })   
   }
   
   let personsToShow = filterText === '' ? persons : persons.filter(person => person.name.toLowerCase().includes(filterText.toLowerCase()));
